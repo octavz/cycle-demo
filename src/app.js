@@ -1,9 +1,9 @@
-import {div} from '@cycle/dom'
+import {html} from 'snabbdom-jsx'
 import xs from 'xstream'
 
 export function App (sources) {
   const vtree$ = xs.of(
-    div('My Awesome Cycle.js app')
+    <div>My Awesome Cycle.js app</div>
   )
   const sinks = {
     DOM: vtree$

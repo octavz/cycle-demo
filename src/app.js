@@ -30,7 +30,25 @@ function view() {
     )
 }
 
+function intent(sources) {
+  const inputLogin$ = sources.DOM.select('#text-login')
+    .events('input')
+    .map(ev =>  ev.target.value)
+    .map(payload => ({type: 'inputLogin', payload}));
+
+  const inputPassword$ = sources.DOM.select('#text-password')
+    .events('input')
+    .map(ev =>  ev.target.value)
+    .map(payload => ({type: 'inputPassword', payload}));
+
+  return xs.merge(inputLogin$, inputPassword$);
+}
+
 export function App (sources) {
+  const action$ = intent(sources)/*.debug("actions")*/;
+  action$.addListener({
+    next: (value) => console.log("=>", value)
+  })
   const vtree$ = xs.of(
     view()
   );

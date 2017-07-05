@@ -45,17 +45,14 @@ function intent(sources) {
 }
 
 function model(action$) {
-  var state = {};
-
-  return (action$.map(action => {
-      if(action.type === 'inputLogin') {
-        state =  {...state, login: action.payload}
-      } else if(action.type === 'inputPassword') {
-        state = {...state, password: action.payload}
-      }
-      return state;
+  const initState = {};
+  return action$.fold((state, action) => {
+    if(action.type === 'inputLogin') {
+      return {...state, login: action.payload}
+    } else if(action.type === 'inputPassword') {
+      return {...state, password: action.payload}
     }
-  ));
+  }, initState);
 }
 
 export function App (sources) {

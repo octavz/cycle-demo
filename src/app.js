@@ -1,7 +1,7 @@
 import {html} from 'snabbdom-jsx'
 import xs from 'xstream'
 
-function view() {
+function view(state$) {
   const labeledInput = (id, label, type="text", value="") => (
     <div className="form-group row">
       <div className="col-md-4 col-sm-5">
@@ -12,7 +12,7 @@ function view() {
       </div>
     </div>
   )
-  return (
+  return state$.map(state => 
     <div className="row">
       <div className="card col-md-4 offset-md-4 p-0">
         <div className="card-header">Login</div>
@@ -21,13 +21,17 @@ function view() {
           { labeledInput("text-password","Password","password") }
           <div className="row">
             <div className="offset-md-5 offset-sm-4">
-              <a href="#" className="btn btn-primary">Sign In</a>
+              {(state.login && state.password) ? (
+                <a href="#" className="btn btn-primary">Sign In</a>
+              ) : (
+                <span>User, password not here!!</span>
+              )}
             </div>
           </div>
         </div>
       </div>
     </div>
-    )
+  );
 }
 
 function intent(sources) {
@@ -58,12 +62,7 @@ function model(action$) {
 export function App (sources) {
   const action$ = intent(sources).debug("action");
   const state$ = model(action$).startWith({}).debug("state");
-  state$.addListener({
-    next: (v) => console.log(v)
-  });
-  const vtree$ = xs.of(
-    view()
-  );
+  const vtree$ = view(state$);
   const sinks = {
     DOM: vtree$
   }

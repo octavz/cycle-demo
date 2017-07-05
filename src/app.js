@@ -26,6 +26,7 @@ function view(state$) {
               ) : (
                 <span>User, password not here!!</span>
               )}
+              <br/><span>{state.response ? state.response.email: ''}</span>
             </div>
           </div>
         </div>
@@ -45,7 +46,22 @@ function intent(sources) {
     .map(ev =>  ev.target.value)
     .map(payload => ({type: 'inputPassword', payload}));
 
-  return xs.merge(inputLogin$, inputPassword$);
+  const clickLogin$ = sources.DOM.select('.btn')
+    .events('click')
+    .mapTo({
+      type: 'clickLogin',
+      payload: {
+        url: 'https://jsonplaceholder.typicode.com/users/1',
+          category: 'users',
+          method: 'GET'
+      }});
+
+  const responseUser$ = sources.HTTP.select('users')
+    .map(res$ => res$.replaceError(xs.of))
+    .flatten()
+    .map(res => res.body ? {type: 'responseUser', payload: res.body} : {type: 'responseUserError', payload: res})
+
+    return xs.merge(inputLogin$, inputPassword$, responseUser$, clickLogin$);
 }
 
 function model(action$) {
@@ -55,7 +71,14 @@ function model(action$) {
       return {...state, login: action.payload}
     } else if(action.type === 'inputPassword') {
       return {...state, password: action.payload}
+    } else if(action.type === 'clickLogin') {
+      return {...state, request: action.payload}
+    } else if(action.type === 'responseUser') {
+      return {...state, response: action.payload, request: null, err: null}
+    } else if(action.type === 'responseUserError') {
+      return {...state, err: action.payload, request: null}
     }
+
   }, initState);
 }
 
@@ -64,7 +87,9 @@ export function App (sources) {
   const state$ = model(action$).startWith({}).debug("state");
   const vtree$ = view(state$);
   const sinks = {
-    DOM: vtree$
+    DOM: vtree$,
+    //HTTP: state$.filter(s => s.request).map(s => ({...s.request, url: s.request.url + s.login}))
+    HTTP: state$.filter(s => s.request).map(s => ({...s.request}))
   }
   return sinks
 }

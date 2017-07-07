@@ -51,7 +51,7 @@ function intent(sources) {
     .mapTo({
       type: 'clickLogin',
       payload: {
-        url: 'https://jsonplaceholder.typicode.com/users/1',
+        url: 'https://jsonplaceholder.typicode.com/users/',
           category: 'users',
           method: 'GET'
       }});
@@ -72,7 +72,7 @@ function model(action$) {
     } else if(action.type === 'inputPassword') {
       return {...state, password: action.payload}
     } else if(action.type === 'clickLogin') {
-      return {...state, request: action.payload}
+      return {...state, request: {...action.payload, url: action.payload.url + state.login}}
     } else if(action.type === 'responseUser') {
       return {...state, response: action.payload, request: null, err: null}
     } else if(action.type === 'responseUserError') {
@@ -83,12 +83,11 @@ function model(action$) {
 }
 
 export function App (sources) {
-  const action$ = intent(sources).debug("action");
+  const action$ = intent(sources);
   const state$ = model(action$).startWith({}).debug("state");
   const vtree$ = view(state$);
   const sinks = {
     DOM: vtree$,
-    //HTTP: state$.filter(s => s.request).map(s => ({...s.request, url: s.request.url + s.login}))
     HTTP: state$.filter(s => s.request).map(s => ({...s.request}))
   }
   return sinks
